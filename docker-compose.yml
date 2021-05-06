@@ -1,0 +1,60 @@
+version: '3.7'
+
+services:
+  api-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: base
+    volumes:
+      - ./src:/home/node/app/src
+      - ./node_modules:/home/node/app/node_modules
+      - ./pm2.yml:/home/node/app/pm2.yml
+    container_name: api-app
+    expose:
+      - '4000'
+    networks:
+      - mysqlnetwork
+    ports:
+      - '4000:4000'
+    command: npm run dev
+  mysql:
+    restart: always
+    image: mariadb
+    container_name: mariadb 
+    volumes:
+      - ./store/mysql:/var/lib/mysql
+    mem_limit: 512m
+    networks:
+      - mysqlnetwork
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=local
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=root
+      - PMA_ARBITRARY=1
+      - PMA_HOST=mysql
+      - PMA_PORT=3306
+      - PMA_USER=root
+      - PMA_PASSWORD=root
+  redis-server:
+    restart: always
+    image: redis
+    container_name: redis-server
+    command: /bin/bash -c 'redis-server --appendonly yes'
+    sysctls:
+      - net.core.somaxconn=65535 
+    volumes:
+      - ./store/redis:/data
+    mem_limit: 96m
+    networks:
+      - mysqlnetwork
+volumes:
+  mysql:
+    driver: local
+  redis:
+    driver: local
+
+networks:
+  mysqlnetwork:
+    driver: bridge

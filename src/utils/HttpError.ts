@@ -1,0 +1,54 @@
+export abstract class AppError extends Error {
+  readonly statusCode!: number;
+  readonly name!: string;
+
+  toJSON() {
+    return { 
+      message: this.message, 
+      status: this.statusCode,
+      stack: process.env.NODE_ENV === 'development' ? this.stack : undefined
+    };
+  }
+
+  constructor(message: object | string) {
+    if (message instanceof Object) {
+      super(JSON.stringify(message));
+    } else {
+      super(message);
+    }
+    this.name = this.constructor.name;
+    Error.captureStackTrace(this, this.constructor);
+  }
+}
+
+export class HTTP400Error extends AppError {
+  readonly statusCode = 400;
+
+  constructor(message: string | object = 'Bad Request') {
+    super(message);
+  }
+}
+
+export class HTTP401Error extends AppError {
+  readonly statusCode = 401;
+
+  constructor(message: string | object = 'Unauthorized') {
+    super(message);
+  }
+}
+
+export class HTTP403Error extends AppError {
+  readonly statusCode = 403;
+
+  constructor(message: string | object = 'Forbidden') {
+    super(message);
+  }
+}
+
+export class HTTP404Error extends AppError {
+  readonly statusCode = 404;
+
+  constructor(message: string) {
+    super(message+' Not found');
+  }
+}
